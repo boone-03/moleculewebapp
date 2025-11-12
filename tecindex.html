@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The World of Small Molecules</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Add a custom "science" color to Tailwind
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'science-blue': '#3B82F6',
+                        'science-dark': '#111827',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    
+    <style>
+        /* A little custom style for the 3D viewer canvas */
+        #molecule-viewer canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 0.5rem; /* rounded-lg */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800 font-sans leading-relaxed">
+
+    <header class="bg-science-dark text-white p-8 text-center shadow-lg">
+        <h1 class="text-4xl md:text-5xl font-bold mb-2">The World of Small Molecules</h1>
+        <p class="text-xl text-blue-300">Explore the tiny drugs that change our world.</p>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+
+        <section id="intro" class="mb-12 bg-white p-8 rounded-lg shadow-md">
+            <h2 class="text-3xl font-bold text-science-dark mb-6 text-center">What is a "Small Molecule" Drug?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="p-4 rounded-lg bg-blue-50">
+                    <h3 class="text-2xl font-semibold text-science-blue mb-3">Small Molecules</h3>
+                    <p class="mb-4">These are the classic drugs you think of—like Aspirin or Tylenol. They are simple, low-weight chemicals (less than 900 Daltons) made through chemistry.</p>
+                    <p class="font-bold">Their superpower is their size: they are small enough to get *inside* your body's cells to do their job.</p>
+                </div>
+                <div class="p-4 rounded-lg bg-gray-200">
+                    <h3 class="text-2xl font-semibold text-gray-700 mb-3">...vs. "Biologics"</h3>
+                    <p class="mb-4">Biologics (like insulin or modern vaccines) are *massive* molecules, often thousands of times larger. They are complex proteins grown in living systems.</p>
+                    <p class="font-bold">Because they're so big, they usually work on the *surface* of cells or between them, not inside.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="lock-key" class="mb-12 bg-white p-8 rounded-lg shadow-md">
+            <h2 class="text-3xl font-bold text-science-dark mb-6 text-center">How They Work: The Lock & Key</h2>
+            <div class="text-center">
+                <p class="text-lg max-w-2xl mx-auto mb-6">Drugs work by fitting into specific proteins in your body, called "receptors." This is just like a key fitting into a lock. When the drug (the **key**) binds to the receptor (the **lock**), it triggers a change that stops a symptom or fights a disease.</p>
+                
+                <div class="flex justify-center items-center flex-col p-6 bg-gray-50 rounded-lg max-w-lg mx-auto">
+                    <div id="lock-key-unbound" class="">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" class="h-40">
+                            <title>Drug molecule approaching a receptor</title>
+                            <path d="M60,40 L70,40 L70,30 L90,30 L90,40 L100,40 L100,50 L90,50 L90,60 L70,60 L70,50 L60,50 Z" fill="#F87171" class="transition-transform duration-500 ease-in-out" id="key-shape"/>
+                            <path d="M110,20 L180,20 L180,80 L110,80 L110,70 L130,70 L130,60 L110,60 L110,50 L130,50 L130,40 L110,40 Z" fill="#3B82F6"/>
+                        </svg>
+                        <p class="text-gray-600 italic mt-2">The drug is about to bind to its target receptor.</p>
+                    </div>
+
+                    <div id="lock-key-bound" class="hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" class="h-40">
+                            <title>Drug molecule bound to a receptor</title>
+                            <path d="M110,40 L120,40 L120,30 L140,30 L140,40 L150,40 L150,50 L140,50 L140,60 L120,60 L120,50 L110,50 Z" fill="#F87171"/>
+                            <path d="M110,20 L180,20 L180,80 L110,80 L110,70 L130,70 L130,60 L110,60 L110,50 L130,50 L130,40 L110,40 Z" fill="#3B82F6"/>
+                        </svg>
+                        <p class="text-green-700 font-bold mt-2">Action Triggered! The drug has bound, causing an effect.</p>
+                    </div>
+
+                    <button id="toggle-key-btn" class="mt-6 bg-science-blue text-white font-bold py-2 px-6 rounded-full hover:bg-blue-700 transition duration-300">
+                        Activate Drug
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="explorer" class="mb-12 bg-white p-8 rounded-lg shadow-md">
+            <h2 class="text-3xl font-bold text-science-dark mb-6 text-center">Hands-On: 3D Molecule Explorer</h2>
+            <p class="text-lg max-w-2xl mx-auto mb-6 text-center">Click a button to load a famous small molecule. **Click and drag** to rotate. **Scroll** to zoom. **Right-click and drag** to pan.</p>
+
+            <div class="bg-science-dark p-4 rounded-lg shadow-inner">
+                <div class="flex flex-wrap justify-center gap-2 mb-4">
+                    <button class="mol-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full" data-mol="caffeine">Caffeine</button>
+                    <button class="mol-button bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full" data-mol="aspirin">Aspirin</button>
+                    <button class="mol-button bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-full" data-mol="penicillin">Penicillin G</button>
+                </div>
+                
+                <div id="molecule-viewer-container" class="relative">
+                    <p class="absolute top-2 left-4 text-white text-xl font-bold z-10">Now Viewing: <span id="mol-name" class="text-yellow-300"></span></p>
+                    <div id="molecule-viewer" class="w-full h-96 md:h-[500px] bg-gray-900 rounded-lg">
+                        </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="hall-of-fame" class="mb-12">
+            <h2 class="text-3xl font-bold text-science-dark mb-6 text-center">Hall of Fame: Other Famous Molecules</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md transition-transform hover:scale-105">
+                    <h3 class="text-2xl font-semibold text-science-blue mb-2">Ibuprofen</h3>
+                    <p>A common non-steroidal anti-inflammatory drug (NSAID) used for pain, fever, and inflammation. (e.g., Advil, Motrin)</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md transition-transform hover:scale-105">
+                    <h3 class="text-2xl font-semibold text-science-blue mb-2">Diphenhydramine</h3>
+                    <p>An antihistamine used to treat allergies, insomnia, and motion sickness. (e.g., Benadryl)</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md transition-transform hover:scale-105">
+                    <h3 class="text-2xl font-semibold text-science-blue mb-2">Atorvastatin</h3>
+                    <p>Part of the "statin" class, this is one of the most prescribed drugs in the world for lowering cholesterol. (e.g., Lipitor)</p>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-md transition-transform hover:scale-105">
+                    <h3 class="text-2xl font-semibold text-science-blue mb-2">Metformin</h3>
+                    <p>A first-line medication for the treatment of type 2 diabetes, helping to control blood sugar levels.</p>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-md transition-transform hover:scale-105">
+                    <h3 class="text-2xl font-semibold text-science-blue mb-2">Paracetamol</h3>
+                    <p>Also known as Acetaminophen. A very common medication used to treat pain and fever. (e.g., Tylenol)</p>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-md transition-transform hover:scale-105">
+                    <h3 class="text-2xl font-semibold text-science-blue mb-2">Sertraline</h3>
+                    <p>A selective serotonin reuptake inhibitor (SSRI) used to treat depression, anxiety, and other mood disorders. (e.g., Zoloft)</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="quiz" class="mb-12 bg-white p-8 rounded-lg shadow-md">
+            <h2 class="text-3xl font-bold text-science-dark mb-6 text-center">Test Your Knowledge!</h2>
+            <div id="quiz-container" class="max-w-xl mx-auto">
+                </div>
+            <div class="text-center mt-6">
+                <button id="submit-quiz-btn" class="bg-green-600 text-white font-bold py-2 px-8 rounded-full hover:bg-green-700 transition duration-300">
+                    Check My Answers
+                </button>
+            </div>
+            <div id="quiz-results" class="text-center mt-6 text-2xl font-bold">
+                </div>
+        </section>
+    </main>
+
+    <footer class="bg-science-dark text-gray-400 p-6 text-center">
+        <p>A fun educational project. Molecule models sourced from the <a href="https://www.rcsb.org/" target="_blank" class="text-blue-300 hover:underline">RCSB Protein Data Bank</a>.</p>
+    </footer>
+
+    <script type="module">
+        // Import necessary libraries from the importmap
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { PDBLoader } from 'three/addons/loaders/PDBLoader.js';
+
+        // --- 1. Lock & Key Interactive ---
+        const toggleBtn = document.getElementById('toggle-key-btn');
+        const unboundEl = document.getElementById('lock-key-unbound');
+        const boundEl = document.getElementById('lock-key-bound');
+        let isBound = false;
+
+        toggleBtn.addEventListener('click', () => {
+            isBound = !isBound;
+            if (isBound) {
+                unboundEl.classList.add('hidden');
+                boundEl.classList.remove('hidden');
+                toggleBtn.textContent = 'Reset';
+                toggleBtn.classList.remove('bg-science-blue', 'hover:bg-blue-700');
+                toggleBtn.classList.add('bg-gray-500', 'hover:bg-gray-600');
+            } else {
+                unboundEl.classList.remove('hidden');
+                boundEl.classList.add('hidden');
+                toggleBtn.textContent = 'Activate Drug';
+                toggleBtn.classList.add('bg-science-blue', 'hover:bg-blue-700');
+                toggleBtn.classList.remove('bg-gray-500', 'hover:bg-gray-600');
+            }
+        });
+
+        // --- 2. 3D Molecule Viewer ---
+        
+        // PDB URLs (Ligand codes from RCSB)
+        const moleculeUrls = {
+            caffeine: { url: 'https://files.rcsb.org/ligand/CFF.pdb', name: 'Caffeine' },
+            aspirin: { url: 'https://files.rcsb.org/ligand/AIN.pdb', name: 'Aspirin' },
+            penicillin: { url: 'https://files.rcsb.org/ligand/PENG.pdb', name: 'Penicillin G' }
+        };
+
+        let scene, camera, renderer, controls, loader, currentMolecule;
+        const viewerContainer = document.getElementById('molecule-viewer');
+        const molNameEl = document.getElementById('mol-name');
+
+        function init3DViewer() {
+            // Scene
+            scene = new THREE.Scene();
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, viewerContainer.clientWidth / viewerContainer.clientHeight, 0.1, 1000);
+            camera.position.z = 30;
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(viewerContainer.clientWidth, viewerContainer.clientHeight);
+            renderer.setClearColor(0x111827); // bg-science-dark
+            viewerContainer.appendChild(renderer.domElement);
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(10, 10, 10);
+            scene.add(directionalLight);
+            
+            // Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            
+            // Loader
+            loader = new PDBLoader();
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize, false);
+            
+            // Start animation loop
+            animate();
+        }
+
+        function onWindowResize() {
+            camera.aspect = viewerContainer.clientWidth / viewerContainer.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(viewerContainer.clientWidth, viewerContainer.clientHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update(); // only required if controls.enableDamping = true
+            renderer.render(scene, camera);
+        }
+
+        function loadMolecule(molData) {
+            // Clear previous molecule
+            if (currentMolecule) {
+                scene.remove(currentMolecule);
+            }
+
+            molNameEl.textContent = 'Loading...';
+
+            loader.load(molData.url, (pdb) => {
+                currentMolecule = pdb.root;
+
+                // Center the molecule
+                const box = new THREE.Box3().setFromObject(currentMolecule);
+                const center = box.getCenter(new THREE.Vector3());
+                currentMolecule.position.sub(center); // center the model
+
+                scene.add(currentMolecule);
+                molNameEl.textContent = molData.name;
+            },
+            (xhr) => {
+                // Optional: loading progress
+                // console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+            },
+            (error) => {
+                console.error('An error happened while loading the model:', error);
+                molNameEl.textContent = 'Error loading model';
+            });
+        }
+
+        // Add event listeners to buttons
+        document.querySelectorAll('.mol-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const molKey = button.getAttribute('data-mol');
+                if (moleculeUrls[molKey]) {
+                    loadMolecule(moleculeUrls[molKey]);
+                }
+            });
+        });
+
+        // Init 3D viewer and load first molecule
+        init3DViewer();
+        loadMolecule(moleculeUrls.caffeine);
+
+
+        // --- 3. Quick Quiz ---
+        const quizData = [
+            {
+                question: "What is a key characteristic of a 'small molecule' drug?",
+                options: [
+                    "It's a large protein grown in a lab.",
+                    "It's small enough to get INSIDE a cell.",
+                    "It only works on the surface of cells.",
+                    "It is always a type of vaccine."
+                ],
+                answer: "It's small enough to get INSIDE a cell."
+            },
+            {
+                question: "The 'Lock & Key' analogy describes how a drug (the key) fits into a...?",
+                options: [
+                    "Receptor (the lock)",
+                    "Blood vessel",
+                    "Different drug",
+                    "Virus"
+                ],
+                answer: "Receptor (the lock)"
+            },
+            {
+                question: "What is a 'Biologic' drug (like insulin)?",
+                options: [
+                    "A simple chemical made in a lab.",
+                    "Another name for an antibiotic.",
+                    "A large, complex molecule like a protein.",
+                    "A type of pain reliever."
+                ],
+                answer: "A large, complex molecule like a protein."
+            },
+            {
+                question: "Which of these is a famous small molecule antibiotic?",
+                options: [
+                    "Caffeine",
+                    "Aspirin",
+                    "Penicillin",
+                    "Ibuprofen"
+                ],
+                answer: "Penicillin"
+            },
+            {
+                question: "The 3D model of Caffeine you explored is from what kind of data file?",
+                options: [
+                    "A JPEG image",
+                    "A Microsoft Word document",
+                    "A PDB (Protein Data Bank) file",
+                    "A MP3 audio file"
+                ],
+                answer: "A PDB (Protein Data Bank) file"
+            }
+        ];
+
+        const quizContainer = document.getElementById('quiz-container');
+        const quizResultsEl = document.getElementById('quiz-results');
+        const submitQuizBtn = document.getElementById('submit-quiz-btn');
+
+        function buildQuiz() {
+            quizData.forEach((q, index) => {
+                const questionEl = document.createElement('div');
+                questionEl.classList.add('mb-6');
+                
+                // Add the question text
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-lg', 'font-semibold', 'mb-3');
+                questionText.textContent = `${index + 1}. ${q.question}`;
+                questionEl.appendChild(questionText);
+
+                // Add the options
+                const optionsContainer = document.createElement('div');
+                optionsContainer.classList.add('space-y-2');
+                
+                q.options.forEach(option => {
+                    const label = document.createElement('label');
+                    label.classList.add('flex', 'items-center', 'p-3', 'bg-gray-50', 'rounded-lg', 'hover:bg-gray-100', 'cursor-pointer');
+                    
+                    const input = document.createElement('input');
+                    input.type = 'radio';
+                    input.name = `question-${index}`;
+                    input.value = option;
+                    input.classList.add('mr-3', 'form-radio', 'text-science-blue', 'focus:ring-science-blue');
+                    
+                    label.appendChild(input);
+                    label.appendChild(document.createTextNode(option));
+                    optionsContainer.appendChild(label);
+                });
+                
+                questionEl.appendChild(optionsContainer);
+                quizContainer.appendChild(questionEl);
+            });
+        }
+
+        function showResults() {
+            let correctCount = 0;
+            
+            quizData.forEach((q, index) => {
+                const selected = document.querySelector(`input[name="question-${index}"]:checked`);
+                if (selected && selected.value === q.answer) {
+                    correctCount++;
+                    // Optional: make correct answers green
+                    selected.parentElement.classList.add('bg-green-100', 'border-green-400', 'border');
+                } else if (selected) {
+                    // Optional: make incorrect answers red
+                    selected.parentElement.classList.add('bg-red-100', 'border-red-400', 'border');
+                }
+            });
+
+            quizResultsEl.textContent = `You got ${correctCount} out of ${quizData.length} correct!`;
+            if (correctCount === quizData.length) {
+                quizResultsEl.textContent += " 🎉 Perfect Score!";
+                quizResultsEl.classList.add('text-green-600');
+            } else {
+                quizResultsEl.classList.add('text-science-dark');
+            }
+            
+            submitQuizBtn.disabled = true;
+            submitQuizBtn.textContent = 'Completed!';
+            submitQuizBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Build the quiz on page load
+        buildQuiz();
+        
+        // Add listener for submit button
+        submitQuizBtn.addEventListener('click', showResults);
+
+    </script>
+</body>
+</html>
