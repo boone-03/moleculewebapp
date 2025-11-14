@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADMET-AI Predictor (Demo)</title>
+    <title>Drug Candidate Analyzer (Demo)</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Load Font Awesome Icons -->
@@ -52,11 +52,12 @@
         <!-- Header -->
         <div class="flex items-center space-x-4 mb-6">
             <div class="flex-shrink-0 bg-blue-600 text-white w-12 h-12 rounded-lg flex items-center justify-center">
-                <i class="fa-solid fa-microchip text-2xl"></i>
+                <!-- Changed icon to a flask/vial -->
+                <i class="fa-solid fa-flask-vial text-2xl"></i>
             </div>
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">ADMET-AI Predictor</h1>
-                <p class="text-gray-600">Demo of AI-powered property prediction.</p>
+                <h1 class="text-2xl font-bold text-gray-900">Drug Candidate Analyzer</h1>
+                <p class="text-gray-600">Demo of a multi-profile AI analysis suite.</p>
             </div>
         </div>
 
@@ -71,9 +72,9 @@
             <div>
                 <p class="text-sm text-gray-500">Try an example:</p>
                 <div class="flex flex-wrap gap-2 mt-2">
+                    <button class="example-btn text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-300" data-smiles="CC1(C(N2C(S1)C(C2=O)NC(=O)COC3=CC=CC=C3)C(=O)O)C">Penicillin V</button>
+                    <button class="example-btn text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-300" data-smiles="CN(C)CCC(C1=CC=CC=C1)C2=CC=CC=N2">Nyquil (Doxylamine)</button>
                     <button class="example-btn text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-300" data-smiles="CC(=O)Oc1ccccc1C(=O)O">Aspirin</button>
-                    <button class="example-btn text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-300" data-smiles="CN1C=NC2=C1C(=O)N(C(=O)N2C)C">Caffeine</button>
-                    <button class="example-btn text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-300" data-smiles="CC(=O)NC1=CC=C(C=C1)O">Paracetamol</button>
                 </div>
             </div>
 
@@ -97,81 +98,112 @@
 
         <!-- Results Section (Hidden by default) -->
         <div id="results-container" class="border-t border-gray-200 pt-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-4">Predicted Properties</h2>
             
-            <!-- Result for Molecule Name -->
-            <div class="flex items-center justify-between py-3 border-b border-gray-100">
+            <!-- Overall Molecule Name -->
+            <div class="flex items-center justify-between pb-3 border-b border-gray-200">
                 <span class="text-gray-600 font-medium">Molecule</span>
-                <span id="result-name" class="font-bold text-gray-900"></span>
+                <span id="result-name" class="font-bold text-gray-900 text-lg"></span>
             </div>
 
-            <!-- Result for Solubility -->
-            <div class="flex items-center justify-between py-3 border-b border-gray-100">
-                <span class="text-gray-600 font-medium">Predicted Solubility</span>
-                <span id="result-solubility" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+            <!-- Subsection 1: Solubility Report -->
+            <h2 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Solubility Report</h2>
+            
+            <div class="space-y-2">
+                <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                    <span class="text-gray-600">Predicted Solubility</span>
+                    <span id="result-solubility" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+                </div>
+                <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                    <span class="text-gray-600">Optimization Score</span>
+                    <span id="result-score" class="font-semibold text-blue-600"></span>
+                </div>
+                <div class="flex items-center justify-between py-2">
+                    <span class="text-gray-600">Suggested Tweak</span>
+                    <span id="result-tweak" class="font-semibold text-gray-900"></span>
+                </div>
             </div>
 
-            <!-- Result for Toxicity -->
-            <div class="flex items-center justify-between py-3 border-b border-gray-100">
-                <span class="text-gray-600 font-medium">Toxicity (hERG)</span>
-                <span id="result-toxicity" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+            <!-- Subsection 2: ADMET Profile -->
+            <h2 class="text-lg font-semibold text-gray-900 mt-6 mb-3">ADMET Profile</h2>
+
+            <div class="space-y-2">
+                <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                    <span class="text-gray-600">Blood-Brain Barrier (BBB)</span>
+                    <span id="result-bbb" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+                </div>
+                <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                    <span class="text-gray-600">Metabolism</span>
+                    <span id="result-metabolism" class="font-semibold text-gray-900"></span>
+                </div>
+                <div class="flex items-center justify-between py-2">
+                    <span class="text-gray-600">Toxicity</span>
+                    <span id="result-toxicity" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+                </div>
             </div>
 
-            <!-- Result for BBB Penetration -->
-            <div class="flex items-center justify-between py-3 border-b border-gray-100">
-                <span class="text-gray-600 font-medium">BBB Penetration</span>
-                <span id="result-bbb" class="px-3 py-1 rounded-full text-sm font-medium"></span>
-            </div>
-
-            <!-- Result for Metabolism -->
-            <div class="flex items-center justify-between py-3">
-                <span class="text-gray-600 font-medium">Predicted Metabolism</span>
-                <span id="result-metabolism" class="font-semibold text-gray-900"></span>
-            </div>
         </div>
 
     </div>
 
     <script>
         // --- Mock "AI Model" Database ---
-        // This simulates the AI's knowledge. In a real app, this would
-        // be a complex model, but here we just use a simple lookup table.
+        // This is our "cheat sheet" with all the data for our merged demo.
         const mockModelData = {
             "CC(=O)Oc1ccccc1C(=O)O": {
                 name: "Aspirin",
+                // Solubility Report
                 solubility: "Moderate",
-                toxicity: "Low Risk",
+                score: "B-",
+                tweak: "Add hydroxyl group",
+                confidence: "91.2%",
+                // ADMET Profile
                 bbb: "High",
-                metabolism: "Rapid (Ester hydrolysis)"
+                metabolism: "Rapid (Ester hydrolysis)",
+                toxicity: "Low Risk"
             },
-            "CN1C=NC2=C1C(=O)N(C(=O)N2C)C": {
-                name: "Caffeine",
+            "CC1(C(N2C(S1)C(C2=O)NC(=O)COC3=CC=CC=C3)C(=O)O)C": {
+                name: "Penicillin V",
+                // Solubility Report
+                solubility: "Moderate",
+                score: "C+",
+                tweak: "Formulate as salt",
+                confidence: "88.4%",
+                // ADMET Profile
+                bbb: "Low",
+                metabolism: "Rapid (Hydrolysis)",
+                toxicity: "Low Risk"
+            },
+            "CN(C)CCC(C1=CC=CC=C1)C2=CC=CC=N2": {
+                name: "Doxylamine (Nyquil)",
+                // Solubility Report
                 solubility: "High",
-                toxicity: "Low Risk",
+                score: "A",
+                tweak: "None (Already optimal)",
+                confidence: "95.8%",
+                // ADMET Profile
                 bbb: "High",
-                metabolism: "Stable (CYP1A2)"
-            },
-            "CC(=O)NC1=CC=C(C=C1)O": {
-                name: "Paracetamol",
-                solubility: "Moderate",
-                toxicity: "Low Risk",
-                bbb: "High",
-                metabolism: "Hepatic (Liver)"
+                metabolism: "Hepatic (Liver)",
+                toxicity: "Low Risk"
             }
         };
 
         // --- Helper function to set pill colors ---
         function setPill(element, value) {
             element.textContent = value;
-            element.classList.remove('bg-green-100', 'text-green-800', 'bg-yellow-100', 'text-yellow-800', 'bg-red-100', 'text-red-800');
+            // Clear all previous color classes
+            element.classList.remove('bg-green-100', 'text-green-800', 'bg-yellow-100', 'text-yellow-800', 'bg-red-100', 'text-red-800', 'bg-gray-100', 'text-gray-800');
             
-            if (value === 'High') {
+            const lowerCaseValue = value.toLowerCase();
+
+            if (lowerCaseValue.includes('high')) {
                 element.classList.add('bg-green-100', 'text-green-800');
-            } else if (value === 'Moderate') {
+            } else if (lowerCaseValue.includes('moderate')) {
                 element.classList.add('bg-yellow-100', 'text-yellow-800');
-            } else if (value === 'Low Risk') {
-                 element.classList.add('bg-green-100', 'text-green-800');
-            } else if (value === 'High Risk') {
+            } else if (lowerCaseValue.includes('low risk')) {
+                element.classList.add('bg-green-100', 'text-green-800');
+            } else if (lowerCaseValue.includes('low')) {
+                element.classList.add('bg-yellow-100', 'text-yellow-800');
+            } else if (lowerCaseValue.includes('high risk')) {
                 element.classList.add('bg-red-100', 'text-red-800');
             } else {
                  element.classList.add('bg-gray-100', 'text-gray-800');
@@ -188,10 +220,15 @@
 
         // Result fields
         const resultName = document.getElementById('result-name');
+        // Solubility fields
         const resultSolubility = document.getElementById('result-solubility');
-        const resultToxicity = document.getElementById('result-toxicity');
-        const resultBbb = document.getElementById('result-bbb');
+        const resultScore = document.getElementById('result-score');
+        const resultTweak = document.getElementById('result-tweak');
+        // ADMET fields
+        const resultBBB = document.getElementById('result-bbb');
         const resultMetabolism = document.getElementById('result-metabolism');
+        const resultToxicity = document.getElementById('result-toxicity');
+
 
         // --- Event Listeners ---
 
@@ -238,12 +275,20 @@
                 // 7. Display results or error
                 if (prediction) {
                     // We found a match! Display the "coherent values".
-                    resultName.textContent = prediction.name;
-                    setPill(resultSolubility, prediction.solubility);
-                    setPill(resultToxicity, prediction.toxicity);
-                    setPill(resultBbb, prediction.bbb);
-                    resultMetabolism.textContent = prediction.metabolism;
                     
+                    // Set molecule name
+                    resultName.textContent = prediction.name;
+
+                    // Set Solubility Report
+                    setPill(resultSolubility, prediction.solubility);
+                    resultScore.textContent = prediction.score;
+                    resultTweak.textContent = prediction.tweak;
+                    
+                    // Set ADMET Profile
+                    setPill(resultBBB, prediction.bbb);
+                    resultMetabolism.textContent = prediction.metabolism;
+                    setPill(resultToxicity, prediction.toxicity);
+
                     resultsContainer.style.display = 'block';
                 } else {
                     // No match found in our simple demo
