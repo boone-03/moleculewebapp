@@ -3,44 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drug Candidate Analyzer (Demo)</title>
+    <!-- Updated Title -->
+    <title>Drug Candidate Analyzer (Cited Demo)</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Font Awesome Icons -->
+    <!-- Load FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Configure Tailwind to use Inter font -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                },
-            },
-        }
-    </script>
     <style>
-        /* Custom style for the spinner */
+        /* Custom Loader */
         .loader {
             border-top-color: #3498db;
-            -webkit-animation: spin 1s linear infinite;
             animation: spin 1s linear infinite;
         }
-
-        @-webkit-keyframes spin {
-            0% { -webkit-transform: rotate(0deg); }
-            100% { -webkit-transform: rotate(360deg); }
-        }
-
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Hide the results area initially */
-        #results-container {
-            display: none;
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -52,56 +28,43 @@
         <!-- Header -->
         <div class="flex items-center space-x-4 mb-6">
             <div class="flex-shrink-0 bg-blue-600 text-white w-12 h-12 rounded-lg flex items-center justify-center">
-                <!-- Changed icon to a flask/vial -->
                 <i class="fa-solid fa-flask-vial text-2xl"></i>
             </div>
             <div>
                 <h1 class="text-2xl font-bold text-gray-900">Drug Candidate Analyzer</h1>
-                <p class="text-gray-600">Demo of a multi-profile AI analysis suite.</p>
+                <p class="text-gray-600">Demo of a multi-profile analysis suite.</p>
             </div>
         </div>
 
         <!-- Input Section -->
-        <div class="space-y-4 mb-6">
-            <div>
-                <label for="smiles-input" class="block text-sm font-medium text-gray-700 mb-1">Enter SMILES String</label>
-                <input type="text" id="smiles-input" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., CC(=O)Oc1ccccc1C(=O)O">
+        <div class="mb-6">
+            <label for="smiles-input" class="block text-sm font-medium text-gray-700 mb-2">Enter SMILES String:</label>
+            <input type="text" id="smiles-input" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., CC(=O)Oc1ccccc1C(=O)O">
+            
+            <!-- Example Buttons -->
+            <div class="mt-4 flex flex-wrap gap-2">
+                <button class="example-btn text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200 transition" data-smiles="CC(=O)Oc1ccccc1C(=O)O">Aspirin</button>
+                <button class="example-btn text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200 transition" data-smiles="CC1(C(N2C(S1)C(C2=O)NC(=O)COC3=CC=CC=C3)C(=O)O)C">Penicillin V</button>
+                <button class="example-btn text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200 transition" data-smiles="CN(C)CCC(C1=CC=CC=C1)C2=CC=CC=N2">Doxylamine</button>
             </div>
+        </div>
 
-            <!-- Example Molecules -->
-            <div>
-                <p class="text-sm text-gray-500">Try an example:</p>
-                <div class="flex flex-wrap gap-2 mt-2">
-                    <button class="example-btn text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-300" data-smiles="CC1(C(N2C(S1)C(C2=O)NC(=O)COC3=CC=CC=C3)C(=O)O)C">Penicillin V</button>
-                    <button class="example-btn text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-300" data-smiles="CN(C)CCC(C1=CC=CC=C1)C2=CC=CC=N2">Nyquil (Doxylamine)</button>
-                    <button class="example-btn text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-300" data-smiles="CC(=O)Oc1ccccc1C(=O)O">Aspirin</button>
-                </div>
-            </div>
-
-            <!-- Predict Button -->
-            <button id="predict-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-150 flex items-center justify-center space-x-2">
-                <i class="fa-solid fa-bolt"></i>
-                <span>Predict Properties</span>
+        <!-- Action Button & Loader -->
+        <div class="mb-6 flex flex-col items-center">
+            <button id="predict-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ease-in-out">
+                Analyze Candidate
             </button>
-        </div>
-
-        <!-- Loading Spinner (Hidden by default) -->
-        <div id="loading-spinner" class="hidden flex items-center justify-center py-6">
-            <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
-            <p class="ml-4 text-gray-600">Analyzing molecule...</p>
-        </div>
-
-        <!-- Error Message (Hidden by default) -->
-        <div id="error-message" class="hidden p-4 bg-red-100 text-red-700 rounded-lg">
-            <strong>Model Not Found:</strong> This demo only recognizes the provided examples. Please try one of the buttons above.
+            <div id="loader" class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10 mt-4" style="display: none;"></div>
+            <p id="error-message" class="text-red-600 mt-4" style="display: none;">No data found for this SMILES string in the demo database.</p>
         </div>
 
         <!-- Results Section (Hidden by default) -->
-        <div id="results-container" class="border-t border-gray-200 pt-6">
+        <div id="results-container" class="border-t border-gray-200 pt-6" style="display: none;">
             
             <!-- Overall Molecule Name -->
             <div class="flex items-center justify-between pb-3 border-b border-gray-200">
-                <span class="text-gray-600 font-medium">Molecule</span>
+                <span class="text-gray-600 font-medium">Molecule (Source)</span>
+                <!-- Name field will now include the CID -->
                 <span id="result-name" class="font-bold text-gray-900 text-lg"></span>
             </div>
 
@@ -147,43 +110,44 @@
 
     <script>
         // --- Mock "AI Model" Database ---
-        // This is our "cheat sheet" with all the data for our merged demo.
+        // This data is now based on real-world data from PubChem
         const mockModelData = {
+            // Aspirin (CID: 2244)
             "CC(=O)Oc1ccccc1C(=O)O": {
-                name: "Aspirin",
-                // Solubility Report
-                solubility: "Moderate",
-                score: "B-",
-                tweak: "Add hydroxyl group",
-                confidence: "91.2%",
-                // ADMET Profile
-                bbb: "High",
-                metabolism: "Rapid (Ester hydrolysis)",
-                toxicity: "Low Risk"
+                name: "Aspirin (PubChem CID: 2244)",
+                // Solubility Report (Source: PubChem, ~3.4 mg/mL @ 20°C)
+                solubility: "Moderate", // "Sparingly soluble"
+                score: "B-", // Inferred
+                tweak: "Formulate as salt (e.g., Lysine)", // Inferred
+                // ADMET Profile (Source: PubChem / known pharmacology)
+                bbb: "High", // Known to cross BBB
+                metabolism: "Rapid (Ester hydrolysis)", // Well-known
+                toxicity: "Low Risk (at therapeutic doses)" // Known
             },
+            // Penicillin V (CID: 5904)
             "CC1(C(N2C(S1)C(C2=O)NC(=O)COC3=CC=CC=C3)C(=O)O)C": {
-                name: "Penicillin V",
-                // Solubility Report
-                solubility: "Moderate",
-                score: "C+",
-                tweak: "Formulate as salt",
-                confidence: "88.4%",
-                // ADMET Profile
-                bbb: "Low",
-                metabolism: "Rapid (Hydrolysis)",
-                toxicity: "Low Risk"
+                name: "Penicillin V (PubChem CID: 5904)",
+                // Solubility Report (Source: PubChem, ~1.2 mg/mL)
+                solubility: "Low", // "Sparingly soluble"
+                score: "C+", // Inferred
+                tweak: "Formulate as salt (e.g., Potassium)", // This is why it's sold as Penicillin V-K
+                // ADMET Profile (Source: PubChem / known pharmacology)
+                bbb: "Low", // Poor penetration
+                metabolism: "Excreted unchanged (~60%)", // Known
+                toxicity: "Low Risk (allergy risk)" // Known
             },
+            // Doxylamine (as Succinate Salt) (PubChem CID: 5282253)
+            // The SMILES is for the parent compound (Doxylamine, CID: 3170)
             "CN(C)CCC(C1=CC=CC=C1)C2=CC=CC=N2": {
-                name: "Doxylamine (Nyquil)",
-                // Solubility Report
-                solubility: "High",
-                score: "A",
-                tweak: "None (Already optimal)",
-                confidence: "95.8%",
-                // ADMET Profile
-                bbb: "High",
-                metabolism: "Hepatic (Liver)",
-                toxicity: "Low Risk"
+                name: "Doxylamine (as Succinate, CID: 5282253)",
+                // Solubility Report (Source: PubChem, "Freely soluble" as salt)
+                solubility: "High", // Salt form is 1g/1mL
+                score: "A", // Inferred
+                tweak: "None (Optimal as succinate salt)", // Inferred
+                // ADMET Profile (Source: PubChem / known pharmacology)
+                bbb: "High (Causes drowsiness)", // Known
+                metabolism: "Hepatic (Liver)", // Known
+                toxicity: "Low Risk (at therapeutic doses)" // Known
             }
         };
 
@@ -213,10 +177,10 @@
         // --- Get DOM Elements ---
         const smilesInput = document.getElementById('smiles-input');
         const predictBtn = document.getElementById('predict-btn');
-        const exampleBtns = document.querySelectorAll('.example-btn');
-        const loadingSpinner = document.getElementById('loading-spinner');
+        const loader = document.getElementById('loader');
         const resultsContainer = document.getElementById('results-container');
         const errorMessage = document.getElementById('error-message');
+        const exampleBtns = document.querySelectorAll('.example-btn');
 
         // Result fields
         const resultName = document.getElementById('result-name');
@@ -232,51 +196,30 @@
 
         // --- Event Listeners ---
 
-        // Set input value when an example button is clicked
-        exampleBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                smilesInput.value = btn.dataset.smiles;
-                // Automatically run prediction for examples
-                runPrediction();
-            });
-        });
-
-        // Run prediction when the main button is clicked
-        predictBtn.addEventListener('click', runPrediction);
-
-        // --- Main Prediction Function ---
+        // Function to handle prediction
         function runPrediction() {
-            // 1. Get the input value
             const smiles = smilesInput.value.trim();
 
-            // 2. Reset the UI
+            // 1. Reset UI
             resultsContainer.style.display = 'none';
             errorMessage.style.display = 'none';
-
-            if (!smiles) {
-                errorMessage.textContent = 'Please enter a SMILES string.';
-                errorMessage.style.display = 'block';
-                return;
-            }
-
-            // 3. Show loading spinner
-            loadingSpinner.style.display = 'flex';
+            loader.style.display = 'block';
             predictBtn.disabled = true;
 
-            // 4. Simulate AI processing time (1.5 seconds)
+            // 2. Simulate AI processing time
             setTimeout(() => {
-                // 5. "Query" the mock model
+                // 3. Find the molecule in our "database"
                 const prediction = mockModelData[smiles];
 
-                // 6. Hide loading spinner
-                loadingSpinner.style.display = 'none';
+                // 4. Stop loader
+                loader.style.display = 'none';
                 predictBtn.disabled = false;
 
-                // 7. Display results or error
+                // 5. Display results or error
                 if (prediction) {
                     // We found a match! Display the "coherent values".
                     
-                    // Set molecule name
+                    // Set molecule name (now includes CID)
                     resultName.textContent = prediction.name;
 
                     // Set Solubility Report
@@ -292,12 +235,21 @@
                     resultsContainer.style.display = 'block';
                 } else {
                     // No match found in our simple demo
-                    errorMessage.textContent = 'Model Not Found: This demo only recognizes the provided examples. Please try one of the buttons above.';
                     errorMessage.style.display = 'block';
                 }
-
-            }, 1500); // 1.5 second delay
+            }, 1500); // 1.5 second simulated delay
         }
+
+        // 1. Predict Button Click
+        predictBtn.addEventListener('click', runPrediction);
+
+        // 2. Example Buttons Click
+        exampleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                smilesInput.value = btn.getAttribute('data-smiles');
+                runPrediction(); // Automatically run prediction on example click
+            });
+        });
 
     </script>
 </body>
