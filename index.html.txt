@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADMET-AI Predictor (Demo)</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Configure Tailwind to use Inter font -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        /* Custom style for the spinner */
+        .loader {
+            border-top-color: #3498db;
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+        }
+
+        @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Hide the results area initially */
+        #results-container {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans flex items-center justify-center min-h-screen p-4">
+
+    <!-- Main Application Card -->
+    <div class="bg-white w-full max-w-2xl p-8 md:p-10 rounded-xl shadow-lg">
+        
+        <!-- Header -->
+        <div class="flex items-center space-x-4 mb-6">
+            <div class="flex-shrink-0 bg-blue-600 text-white w-12 h-12 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-microchip text-2xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">ADMET-AI Predictor</h1>
+                <p class="text-gray-600">Demo of AI-powered property prediction.</p>
+            </div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="space-y-4 mb-6">
+            <div>
+                <label for="smiles-input" class="block text-sm font-medium text-gray-700 mb-1">Enter SMILES String</label>
+                <input type="text" id="smiles-input" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., CC(=O)Oc1ccccc1C(=O)O">
+            </div>
+
+            <!-- Example Molecules -->
+            <div>
+                <p class="text-sm text-gray-500">Try an example:</p>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <button class="example-btn text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-300" data-smiles="CC(=O)Oc1ccccc1C(=O)O">Aspirin</button>
+                    <button class="example-btn text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-300" data-smiles="CN1C=NC2=C1C(=O)N(C(=O)N2C)C">Caffeine</button>
+                    <button class="example-btn text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-300" data-smiles="CC(=O)NC1=CC=C(C=C1)O">Paracetamol</button>
+                </div>
+            </div>
+
+            <!-- Predict Button -->
+            <button id="predict-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-150 flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-bolt"></i>
+                <span>Predict Properties</span>
+            </button>
+        </div>
+
+        <!-- Loading Spinner (Hidden by default) -->
+        <div id="loading-spinner" class="hidden flex items-center justify-center py-6">
+            <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
+            <p class="ml-4 text-gray-600">Analyzing molecule...</p>
+        </div>
+
+        <!-- Error Message (Hidden by default) -->
+        <div id="error-message" class="hidden p-4 bg-red-100 text-red-700 rounded-lg">
+            <strong>Model Not Found:</strong> This demo only recognizes the provided examples. Please try one of the buttons above.
+        </div>
+
+        <!-- Results Section (Hidden by default) -->
+        <div id="results-container" class="border-t border-gray-200 pt-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Predicted Properties</h2>
+            
+            <!-- Result for Molecule Name -->
+            <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                <span class="text-gray-600 font-medium">Molecule</span>
+                <span id="result-name" class="font-bold text-gray-900"></span>
+            </div>
+
+            <!-- Result for Solubility -->
+            <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                <span class="text-gray-600 font-medium">Predicted Solubility</span>
+                <span id="result-solubility" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+            </div>
+
+            <!-- Result for Toxicity -->
+            <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                <span class="text-gray-600 font-medium">Toxicity (hERG)</span>
+                <span id="result-toxicity" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+            </div>
+
+            <!-- Result for BBB Penetration -->
+            <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                <span class="text-gray-600 font-medium">BBB Penetration</span>
+                <span id="result-bbb" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+            </div>
+
+            <!-- Result for Metabolism -->
+            <div class="flex items-center justify-between py-3">
+                <span class="text-gray-600 font-medium">Predicted Metabolism</span>
+                <span id="result-metabolism" class="font-semibold text-gray-900"></span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Mock "AI Model" Database ---
+        // This simulates the AI's knowledge. In a real app, this would
+        // be a complex model, but here we just use a simple lookup table.
+        const mockModelData = {
+            "CC(=O)Oc1ccccc1C(=O)O": {
+                name: "Aspirin",
+                solubility: "Moderate",
+                toxicity: "Low Risk",
+                bbb: "High",
+                metabolism: "Rapid (Ester hydrolysis)"
+            },
+            "CN1C=NC2=C1C(=O)N(C(=O)N2C)C": {
+                name: "Caffeine",
+                solubility: "High",
+                toxicity: "Low Risk",
+                bbb: "High",
+                metabolism: "Stable (CYP1A2)"
+            },
+            "CC(=O)NC1=CC=C(C=C1)O": {
+                name: "Paracetamol",
+                solubility: "Moderate",
+                toxicity: "Low Risk",
+                bbb: "High",
+                metabolism: "Hepatic (Liver)"
+            }
+        };
+
+        // --- Helper function to set pill colors ---
+        function setPill(element, value) {
+            element.textContent = value;
+            element.classList.remove('bg-green-100', 'text-green-800', 'bg-yellow-100', 'text-yellow-800', 'bg-red-100', 'text-red-800');
+            
+            if (value === 'High') {
+                element.classList.add('bg-green-100', 'text-green-800');
+            } else if (value === 'Moderate') {
+                element.classList.add('bg-yellow-100', 'text-yellow-800');
+            } else if (value === 'Low Risk') {
+                 element.classList.add('bg-green-100', 'text-green-800');
+            } else if (value === 'High Risk') {
+                element.classList.add('bg-red-100', 'text-red-800');
+            } else {
+                 element.classList.add('bg-gray-100', 'text-gray-800');
+            }
+        }
+
+        // --- Get DOM Elements ---
+        const smilesInput = document.getElementById('smiles-input');
+        const predictBtn = document.getElementById('predict-btn');
+        const exampleBtns = document.querySelectorAll('.example-btn');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const resultsContainer = document.getElementById('results-container');
+        const errorMessage = document.getElementById('error-message');
+
+        // Result fields
+        const resultName = document.getElementById('result-name');
+        const resultSolubility = document.getElementById('result-solubility');
+        const resultToxicity = document.getElementById('result-toxicity');
+        const resultBbb = document.getElementById('result-bbb');
+        const resultMetabolism = document.getElementById('result-metabolism');
+
+        // --- Event Listeners ---
+
+        // Set input value when an example button is clicked
+        exampleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                smilesInput.value = btn.dataset.smiles;
+                // Automatically run prediction for examples
+                runPrediction();
+            });
+        });
+
+        // Run prediction when the main button is clicked
+        predictBtn.addEventListener('click', runPrediction);
+
+        // --- Main Prediction Function ---
+        function runPrediction() {
+            // 1. Get the input value
+            const smiles = smilesInput.value.trim();
+
+            // 2. Reset the UI
+            resultsContainer.style.display = 'none';
+            errorMessage.style.display = 'none';
+
+            if (!smiles) {
+                errorMessage.textContent = 'Please enter a SMILES string.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            // 3. Show loading spinner
+            loadingSpinner.style.display = 'flex';
+            predictBtn.disabled = true;
+
+            // 4. Simulate AI processing time (1.5 seconds)
+            setTimeout(() => {
+                // 5. "Query" the mock model
+                const prediction = mockModelData[smiles];
+
+                // 6. Hide loading spinner
+                loadingSpinner.style.display = 'none';
+                predictBtn.disabled = false;
+
+                // 7. Display results or error
+                if (prediction) {
+                    // We found a match! Display the "coherent values".
+                    resultName.textContent = prediction.name;
+                    setPill(resultSolubility, prediction.solubility);
+                    setPill(resultToxicity, prediction.toxicity);
+                    setPill(resultBbb, prediction.bbb);
+                    resultMetabolism.textContent = prediction.metabolism;
+                    
+                    resultsContainer.style.display = 'block';
+                } else {
+                    // No match found in our simple demo
+                    errorMessage.textContent = 'Model Not Found: This demo only recognizes the provided examples. Please try one of the buttons above.';
+                    errorMessage.style.display = 'block';
+                }
+
+            }, 1500); // 1.5 second delay
+        }
+
+    </script>
+</body>
+</html>
